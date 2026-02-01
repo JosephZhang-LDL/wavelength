@@ -128,7 +128,9 @@ function Game({ room, socket, playerId, roomId }: GameProps) {
                   <h3>Round Complete!</h3>
                   <p>The target was at {room.targetPosition}%</p>
                   <p>Your guess was at {room.guessPosition}%</p>
-                  <p>Difference: {Math.abs(room.targetPosition - (room.guessPosition || 0))}%</p>
+                  {room.guessPosition !== null && (
+                    <p>Difference: {Math.abs(room.targetPosition - room.guessPosition)}%</p>
+                  )}
                 </div>
               )}
             </div>

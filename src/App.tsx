@@ -33,7 +33,8 @@ function App() {
   const [inGame, setInGame] = useState(false);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3001');
+    const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+    const newSocket = io(serverUrl);
     setSocket(newSocket);
 
     newSocket.on('roomJoined', ({ roomId, room }) => {

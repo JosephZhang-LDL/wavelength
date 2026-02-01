@@ -147,6 +147,7 @@ function WheelDisplay({
 
   useEffect(() => {
     drawWheel();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetPosition, guessPosition, revealed, hoveredPosition]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
