@@ -16,6 +16,20 @@ interface WheelDisplayProps {
   clueSubmitted: boolean;
 }
 
+// Scoring zone configuration
+// Total range is ~20 degrees (0.349 radians)
+// Each zone is about 4 degrees (0.07 radians)
+const ZONE_ANGLE = 0.07; // ~4 degrees per zone
+const ZONE_SCORES = [
+  { offset: 0, score: 4, color: '#ff4081' },        // Center: 4 points
+  { offset: 1, score: 3, color: '#ff6e40' },        // Adjacent: 3 points
+  { offset: -1, score: 3, color: '#ff6e40' },
+  { offset: 2, score: 2, color: '#ffab40' },        // Next: 2 points
+  { offset: -2, score: 2, color: '#ffab40' },
+  { offset: 3, score: 1, color: '#ffd740' },        // Outer: 1 point
+  { offset: -3, score: 1, color: '#ffd740' },
+];
+
 function WheelDisplay({
   spectrum,
   targetPosition,
@@ -27,6 +41,58 @@ function WheelDisplay({
 }: WheelDisplayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredPosition, setHoveredPosition] = useState<number | null>(null);
+  // Initialize cover to fully closed for guessers, open for clue givers
+  const [coverProgress, setCoverProgress] = useState(() => isClueGiver ? 0 : 1);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const animationRef = useRef<number | null>(null);
+  const hasAnimatedRef = useRef(false);
+
+  // Animate cover opening when clue is submitted and not revealed
+  useEffect(() => {
+    // For clue givers, always keep cover open
+    if (isClueGiver) {
+      setCoverProgress(0);
+      return;
+    }
+
+    if (clueSubmitted && !revealed && !hasAnimatedRef.current) {
+      // Start cover animation (opening) - only once when clue is first submitted
+      hasAnimatedRef.current = true;
+      setIsAnimating(true);
+      setCoverProgress(1); // Start fully covered
+      
+      const startTime = performance.now();
+      const duration = 1500; // 1.5 seconds for animation
+      
+      const animate = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Ease out animation
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        setCoverProgress(1 - easeProgress);
+        
+        if (progress < 1) {
+          animationRef.current = requestAnimationFrame(animate);
+        } else {
+          setIsAnimating(false);
+          setCoverProgress(0);
+        }
+      };
+      
+      animationRef.current = requestAnimationFrame(animate);
+      
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    } else if (!clueSubmitted) {
+      setCoverProgress(1); // Keep covered when no clue submitted
+      hasAnimatedRef.current = false; // Reset for next round
+    } else if (revealed) {
+      setCoverProgress(0); // Fully open when revealed
+    }
+  }, [clueSubmitted, revealed, isClueGiver]);
 
   const drawWheel = () => {
     const canvas = canvasRef.current;
@@ -42,15 +108,10 @@ function WheelDisplay({
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw semicircle gradient
-    const gradient = ctx.createLinearGradient(centerX - radius, 0, centerX + radius, 0);
-    gradient.addColorStop(0, '#e53935');
-    gradient.addColorStop(0.5, '#ffd600');
-    gradient.addColorStop(1, '#43a047');
-
+    // Draw semicircle with solid color background
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, Math.PI, 0);
-    ctx.fillStyle = gradient;
+    ctx.fillStyle = '#667eea'; // Single solid color (purple/blue)
     ctx.fill();
     ctx.strokeStyle = '#333';
     ctx.lineWidth = 3;
@@ -71,35 +132,54 @@ function WheelDisplay({
       ctx.stroke();
     }
 
-    // Draw target position (if visible)
+    // Draw target scoring zones (if visible)
     if (targetPosition !== null) {
       const targetAngle = Math.PI - (targetPosition / 100) * Math.PI;
-      const targetX = centerX + Math.cos(targetAngle) * (radius - 30);
-      const targetY = centerY + Math.sin(targetAngle) * (radius - 30);
+      
+      // Draw scoring zones from outer to inner (so inner zones appear on top)
+      const sortedZones = [...ZONE_SCORES].sort((a, b) => Math.abs(b.offset) - Math.abs(a.offset));
+      
+      for (const zone of sortedZones) {
+        const zoneStartAngle = targetAngle - ZONE_ANGLE / 2 + zone.offset * ZONE_ANGLE;
+        const zoneEndAngle = targetAngle + ZONE_ANGLE / 2 + zone.offset * ZONE_ANGLE;
+        
+        // Draw the zone as a pie slice
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius - 5, zoneStartAngle, zoneEndAngle);
+        ctx.closePath();
+        ctx.fillStyle = zone.color;
+        ctx.fill();
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.restore();
+        
+        // Draw score label for this zone
+        const labelAngle = (zoneStartAngle + zoneEndAngle) / 2;
+        const labelRadius = radius - 40;
+        const labelX = centerX + Math.cos(labelAngle) * labelRadius;
+        const labelY = centerY + Math.sin(labelAngle) * labelRadius;
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(zone.score.toString(), labelX, labelY);
+      }
 
-      // Draw target zone (a narrow band)
-      ctx.save();
+      // Draw center target marker
+      const targetX = centerX + Math.cos(targetAngle) * (radius - 70);
+      const targetY = centerY + Math.sin(targetAngle) * (radius - 70);
+      
       ctx.beginPath();
-      ctx.arc(centerX, centerY, radius - 20, targetAngle - 0.1, targetAngle + 0.1);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.lineWidth = 20;
-      ctx.stroke();
-      ctx.restore();
-
-      // Draw target marker
-      ctx.beginPath();
-      ctx.arc(targetX, targetY, 12, 0, Math.PI * 2);
+      ctx.arc(targetX, targetY, 8, 0, Math.PI * 2);
       ctx.fillStyle = 'white';
       ctx.fill();
       ctx.strokeStyle = '#333';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2;
       ctx.stroke();
-
-      // Draw label
-      ctx.fillStyle = '#333';
-      ctx.font = 'bold 14px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('TARGET', targetX, targetY - 25);
     }
 
     // Draw guess position (if exists)
@@ -143,12 +223,44 @@ function WheelDisplay({
       ctx.fillStyle = 'rgba(33, 150, 243, 0.5)';
       ctx.fill();
     }
+
+    // Draw cover (if animating or waiting for clue)
+    if (coverProgress > 0 && !isClueGiver) {
+      // The top of the semicircle is at angle -PI/2 (or 3*PI/2) in canvas coordinates
+      // Left edge is at PI, right edge is at 0
+      
+      // Draw left cover - covers from left side (Math.PI) towards top (-Math.PI/2)
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      // When coverProgress = 1, cover goes from Math.PI to Math.PI/2 (full left half going counterclockwise/up)
+      // When coverProgress = 0, cover is gone (stays at Math.PI)
+      const leftCoverAngle = Math.PI - (Math.PI / 2) * coverProgress;
+      ctx.arc(centerX, centerY, radius + 5, Math.PI, leftCoverAngle, true);
+      ctx.closePath();
+      ctx.fillStyle = '#2c3e50';
+      ctx.fill();
+      ctx.restore();
+      
+      // Draw right cover - covers from right side (0) towards top (-Math.PI/2)
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      // When coverProgress = 1, cover goes from 0 to -Math.PI/2 (full right half going counterclockwise/up)
+      // When coverProgress = 0, cover is gone (stays at 0)
+      const rightCoverAngle = -(Math.PI / 2) * coverProgress;
+      ctx.arc(centerX, centerY, radius + 5, 0, rightCoverAngle, true);
+      ctx.closePath();
+      ctx.fillStyle = '#2c3e50';
+      ctx.fill();
+      ctx.restore();
+    }
   };
 
   useEffect(() => {
     drawWheel();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetPosition, guessPosition, revealed, hoveredPosition]);
+  }, [targetPosition, guessPosition, revealed, hoveredPosition, coverProgress]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (isClueGiver || !clueSubmitted || revealed) return;
