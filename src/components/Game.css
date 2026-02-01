@@ -1,0 +1,167 @@
+.game-container {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.game-title {
+  font-size: 32px;
+  color: #667eea;
+  margin: 0;
+}
+
+.room-info {
+  font-size: 18px;
+  color: #666;
+}
+
+.players-list {
+  margin-bottom: 30px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 10px;
+}
+
+.players-list h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.players-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.players-list li {
+  padding: 8px 15px;
+  background: white;
+  border-radius: 20px;
+  color: #666;
+}
+
+.players-list li.active-player {
+  background: #667eea;
+  color: white;
+  font-weight: bold;
+}
+
+.game-board {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.game-controls {
+  text-align: center;
+}
+
+.clue-giver-section,
+.guesser-section {
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 10px;
+}
+
+.clue-giver-section h3,
+.guesser-section h3 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.clue-input-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.clue-input {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  outline: none;
+}
+
+.clue-input:focus {
+  border-color: #667eea;
+}
+
+.submit-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.submit-button:hover {
+  background: #5568d3;
+}
+
+.waiting-message {
+  padding: 20px;
+}
+
+.waiting-message h3 {
+  color: #667eea;
+  margin-bottom: 10px;
+}
+
+.guessing-section h3 {
+  color: #667eea;
+  margin-bottom: 10px;
+}
+
+.result-message {
+  padding: 20px;
+  background: #e8f5e9;
+  border-radius: 10px;
+}
+
+.result-message h3 {
+  color: #2e7d32;
+  margin-bottom: 15px;
+}
+
+.result-message p {
+  margin: 5px 0;
+  color: #333;
+}
+
+.new-round-button {
+  margin-top: 20px;
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.new-round-button:hover {
+  background: #45a049;
+}
