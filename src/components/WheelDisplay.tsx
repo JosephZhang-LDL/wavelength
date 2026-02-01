@@ -17,9 +17,11 @@ interface WheelDisplayProps {
 }
 
 // Scoring zone configuration
-// Total range is ~20 degrees (0.349 radians)
-// Each zone is about 4 degrees (0.07 radians)
-const ZONE_ANGLE = 0.07; // ~4 degrees per zone
+// Total range is ~28 degrees (7 zones * 4 degrees each)
+// Each zone is about 4 degrees
+const ZONE_ANGLE_DEGREES = 4;
+const ZONE_ANGLE = ZONE_ANGLE_DEGREES * Math.PI / 180; // Convert degrees to radians
+const HALF_PI = Math.PI / 2;
 const ZONE_SCORES = [
   { offset: 0, score: 4, color: '#ff4081' },        // Center: 4 points
   { offset: 1, score: 3, color: '#ff6e40' },        // Adjacent: 3 points
@@ -42,7 +44,7 @@ function WheelDisplay({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredPosition, setHoveredPosition] = useState<number | null>(null);
   // Initialize cover to fully closed for guessers, open for clue givers
-  const [coverProgress, setCoverProgress] = useState(() => isClueGiver ? 0 : 1);
+  const [coverProgress, setCoverProgress] = useState(isClueGiver ? 0 : 1);
   const [isAnimating, setIsAnimating] = useState(false);
   const animationRef = useRef<number | null>(null);
   const hasAnimatedRef = useRef(false);
@@ -226,29 +228,29 @@ function WheelDisplay({
 
     // Draw cover (if animating or waiting for clue)
     if (coverProgress > 0 && !isClueGiver) {
-      // The top of the semicircle is at angle -PI/2 (or 3*PI/2) in canvas coordinates
+      // The top of the semicircle is at angle -HALF_PI in canvas coordinates
       // Left edge is at PI, right edge is at 0
       
-      // Draw left cover - covers from left side (Math.PI) towards top (-Math.PI/2)
+      // Draw left cover - covers from left side (Math.PI) towards top (-HALF_PI)
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
-      // When coverProgress = 1, cover goes from Math.PI to Math.PI/2 (full left half going counterclockwise/up)
+      // When coverProgress = 1, cover goes from Math.PI to HALF_PI (full left half going counterclockwise/up)
       // When coverProgress = 0, cover is gone (stays at Math.PI)
-      const leftCoverAngle = Math.PI - (Math.PI / 2) * coverProgress;
+      const leftCoverAngle = Math.PI - HALF_PI * coverProgress;
       ctx.arc(centerX, centerY, radius + 5, Math.PI, leftCoverAngle, true);
       ctx.closePath();
       ctx.fillStyle = '#2c3e50';
       ctx.fill();
       ctx.restore();
       
-      // Draw right cover - covers from right side (0) towards top (-Math.PI/2)
+      // Draw right cover - covers from right side (0) towards top (-HALF_PI)
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
-      // When coverProgress = 1, cover goes from 0 to -Math.PI/2 (full right half going counterclockwise/up)
+      // When coverProgress = 1, cover goes from 0 to -HALF_PI (full right half going counterclockwise/up)
       // When coverProgress = 0, cover is gone (stays at 0)
-      const rightCoverAngle = -(Math.PI / 2) * coverProgress;
+      const rightCoverAngle = -HALF_PI * coverProgress;
       ctx.arc(centerX, centerY, radius + 5, 0, rightCoverAngle, true);
       ctx.closePath();
       ctx.fillStyle = '#2c3e50';
