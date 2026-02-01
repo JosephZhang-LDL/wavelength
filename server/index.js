@@ -28,10 +28,21 @@ const spectrums = [
   { left: "Soft", right: "Hard" }
 ];
 
+// Minimum and maximum target position to ensure scoring zones stay on wheel
+// Scoring zones extend 14 degrees on each side (~8% of 180 degrees)
+// Using 10-90 range to provide safe margin
+const MIN_TARGET_POSITION = 10;
+const MAX_TARGET_POSITION = 90;
+
+// Helper function to generate a random target position within the safe range
+function generateTargetPosition() {
+  const targetRange = MAX_TARGET_POSITION - MIN_TARGET_POSITION + 1; // +1 to make MAX inclusive
+  return MIN_TARGET_POSITION + Math.floor(Math.random() * targetRange);
+}
+
 function createRoom(roomId) {
   const spectrum = spectrums[Math.floor(Math.random() * spectrums.length)];
-  // Target position is between 0 and 100 (percentage on the spectrum)
-  const targetPosition = Math.floor(Math.random() * 100);
+  const targetPosition = generateTargetPosition();
   
   return {
     id: roomId,
@@ -103,7 +114,7 @@ io.on('connection', (socket) => {
     if (room) {
       // Reset for new round
       const spectrum = spectrums[Math.floor(Math.random() * spectrums.length)];
-      const targetPosition = Math.floor(Math.random() * 100);
+      const targetPosition = generateTargetPosition();
       
       // Rotate clue giver to next player
       const currentIndex = room.players.findIndex(p => p.id === room.currentCluegiver);
