@@ -1,0 +1,39 @@
+.wheel-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 15px;
+  margin: 20px 0;
+}
+
+.spectrum-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 10px;
+}
+
+.spectrum-label {
+  font-size: 20px;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 10px;
+}
+
+.spectrum-label.left {
+  background: #ffebee;
+  color: #e53935;
+}
+
+.spectrum-label.right {
+  background: #e8f5e9;
+  color: #43a047;
+}
+
+.wheel-canvas {
+  border-radius: 10px;
+  background: white;
+}
